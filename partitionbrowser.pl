@@ -6,7 +6,7 @@ my $numArgs = @ARGV;
 
 if ($numArgs < 1)
 {
-	print "partition file argument missing\n";
+	print "\n Partition file argument missing\n\n";
 	exit 0;
 }
 
@@ -22,7 +22,7 @@ if ($numArgs == 1)
 		$counter ++;
 	}
 	
-	print "Total number of partitions: " . $counter . "\n";	
+	print "\n Total number of partitions: " . $counter . "\n\n";	
 }
 else
 #a second argument/option is available
@@ -62,13 +62,12 @@ else
                 	my ($A1, $A2, $A3, $A4, $A5, $A6) = split(/ /, $_);
                 	my $permissions = $A4;
 			
-			print $permissions;
 			if($permissions eq "rw")
 			{
 				$counter ++;
 			}
 	        }
-		print "Number of read-write partitions: $counter\n";
+		print "\n Number of read-write partitions: $counter\n\n";
         }
 	elsif($ARGV[1] eq "-a")
         {
@@ -90,11 +89,46 @@ else
 				$overallSpaceAvailable += $availableSpace;
 			}
         	}
-		print "Overall Space Available in RW partitions: $overallSpaceAvailable\n";
+		print "\n Overall Space Available in RW partitions: $overallSpaceAvailable\n\n";
         }
 	elsif($ARGV[1] eq "-p")
         {
 		#display partition permission and available space
+		if($numArgs < 3)
+		{
+			print "\n Missing partition name\n\n";
+			exit 0;
+		}
+		else
+		{
+			my $matchesFound = 0;
+			while (<INFILE>)
+                	{
+                        	#each line is assumed to be completely valid
+                        	#no validation required
+
+                        	my ($A1, $A2, $A3, $A4, $A5, $A6) = split(/ /, $_);
+                        	my $partition = $A1;
+
+                        	if($partition eq $ARGV[2])
+                        	{
+                                	#found a match
+					$matchesFound ++;
+					my $permissions = $A4;
+                        		my $totalSpace = $A5;
+                        		my $usedSpace = $A6;
+					my $availableSpace = ($totalSpace - $usedSpace);
+					print "\n Partition:\t\t$partition\n";
+					print " Permission(s):\t\t$permissions\n";
+					print " Available Space:\t$availableSpace\n\n";
+                        	}
+                	}
+			
+			if($matchesFound < 1)
+                        {
+                        	print "\n No partition matches found.\n\n";
+                        }
+		}
         }
 	elsif($ARGV[1] eq "-s")
         {
