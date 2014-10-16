@@ -4,13 +4,31 @@ use warnings;
 
 my $numArgs = @ARGV;
 
+#functions
+sub getFullPermissionName
+{
+	if($_[0] eq "rw")
+	{
+		return "read-write";
+	}
+	elsif($_[0] eq "ro")
+	{
+		return "read-only";
+	}
+	else
+	{
+		return $_[0];
+	}
+}
+
+#main
 if ($numArgs < 1)
 {
 	print "\n Partition file argument missing\n\n";
 	exit 0;
 }
 
-open (INFILE, $ARGV[0]) || die "partition file invalid\n";
+open (INFILE, $ARGV[0]) || die "\n Partition file invalid\n\n";
 if ($numArgs == 1)
 #only one option is available
 {
@@ -29,26 +47,41 @@ else
 {
 	if($ARGV[1] eq "-f")
        	{
-		#display unique file systems in use
-		my $partition;
-        	my $mountPoint;
-        	my $fileSystemType;
-        	my $permissions;
-        	my $totalSpace;
-        	my $usedSpace;
-        	while (<INFILE>)
+		#display unique file systems in order of first come
+        	my @distinctFileSystemTypes;
+		my $counter = 0;
+		while (<INFILE>)
         	{
                 	#each line is assumed to be completely valid
                 	#no validation required
-
+			
                 	my ($A1, $A2, $A3, $A4, $A5, $A6) = split(/ /, $_);
-                	$partition = $A1;
-                	$mountPoint = $A2;
-                	$fileSystemType = $A3;
-               		$permissions = $A4;
-               		$totalSpace = $A5;
-                	$usedSpace = $A6;
-        	}
+                	my $fileSystemType = $A3;			
+
+			my $safeToAdd = 1;			
+			foreach (@distinctFileSystemTypes) 
+			{
+				if($_ eq $fileSystemType)
+				{
+					$safeToAdd = 0;
+				}
+			}
+				
+			if($safeToAdd == 1)
+			{
+				push(@distinctFileSystemTypes, $fileSystemType);
+				$counter ++;
+			}
+		}
+
+		if($counter > 1)
+		{
+			print "\n Distinct file systems found: @distinctFileSystemTypes\n\n";
+		}
+		else
+		{
+			print "\n No matching file systems found\n\n";	
+		}
 	}	
 	elsif($ARGV[1] eq "-w")
         {
@@ -89,7 +122,7 @@ else
 				$overallSpaceAvailable += $availableSpace;
 			}
         	}
-		print "\n Overall Space Available in RW partitions: $overallSpaceAvailable\n\n";
+		print "\n Overall space available in read-write partitions: $overallSpaceAvailable\n\n";
         }
 	elsif($ARGV[1] eq "-p")
         {
@@ -118,8 +151,9 @@ else
                         		my $totalSpace = $A5;
                         		my $usedSpace = $A6;
 					my $availableSpace = ($totalSpace - $usedSpace);
+					my $permissionsName = getFullPermissionName($permissions);
 					print "\n Partition:\t\t$partition\n";
-					print " Permission(s):\t\t$permissions\n";
+					print " Permission(s):\t\t$permissionsName\n";
 					print " Available Space:\t$availableSpace\n\n";
                         	}
                 	}
@@ -139,7 +173,7 @@ else
         }
 	else
 	{
-		print "unrecognised second argument\n";
+		print "\n Unrecognised second argument\n\n";
 	}
 }
 
